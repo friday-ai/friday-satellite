@@ -1,6 +1,24 @@
+import Event from '../utils/event';
+import Scheduler from '../utils/scheduler';
+import jobs from '../config/jobs';
+import Log from '../utils/log';
+
+const logger = new Log();
 
 export default class Friday {
-    start() {
+    public event = new Event();
+    public scheduler = new Scheduler(this.event, jobs);
 
+    private debug: boolean;
+
+    constructor(debug: boolean) {
+        this.debug = debug;
+    }
+
+
+    start() {
+        logger.info('Friday is starting');
+        if(this.debug) logger.info('Friday enter in debug mode !');
+        logger.info('Friday has started');
     }
 }
