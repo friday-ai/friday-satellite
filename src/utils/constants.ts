@@ -1,3 +1,15 @@
+import {KVArr} from './interfaces';
+
+export const MasterHost: KVArr<KVArr<string>> = {
+  development: {
+    host: 'localhost',
+    port: '3000'
+  },
+  production: {
+    host: 'friday.master.local',
+    port: '1443'
+  }
+}
 export enum TopicsTypes {
   DEVICE_DESTROY = 'device/destroy',
   DEVICE_SET = 'device/set',
@@ -52,4 +64,6 @@ export enum MqttMessageTypes {
   MESSAGE_SEND_ALL = 'message.send.all',
 }
 
-export const searchMaster = ':8081/api/v1/master/info';
+export const satelliteDiscovery = '/api/v1/satellite/discovery';
+export const loginApi = '/api/v1/user/login';
+export const masterInfo = '/api/v1/system/info';
