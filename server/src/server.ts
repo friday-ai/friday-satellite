@@ -21,9 +21,6 @@ const logger = new Log();
     // Start Friday server
     friday.server = await server.start();
 
-    server.mqttServer.sendMessage({
-      topic: TopicsTypes.SATELLITE_HEARTBEAT, message: { message: 'I am alive !', satelliteId: friday.satelliteId }, type: MqttMessageTypes.MESSAGE_SEND, sender: `${friday.satelliteId}`,
-    }, { sendAll: true });
     // interval 30 Min heartbeat
     setInterval(() => {
       // heartbeat to master

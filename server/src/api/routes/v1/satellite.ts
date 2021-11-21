@@ -7,7 +7,7 @@ import Friday from '../../../core/friday';
 import Master from '../../../core/master';
 import { decrypt } from '../../../utils/keyring';
 import Log from '../../../utils/log';
-import { configMasterDir } from '../../../utils/constants';
+import { configMasterDir, MqttMessageTypes, TopicsTypes } from '../../../utils/constants';
 
 const logger = new Log();
 const file: string = `${configMasterDir}/info.json`;
@@ -63,6 +63,9 @@ export default class SatelliteRouter {
       ),
     );
     logger.info('Server has started');
+    this.friday.server!.mqttServer.sendMessage({
+      topic: TopicsTypes.SATELLITE_HEARTBEAT, message: { message: 'I am alive !', satelliteId: this.friday.satelliteId }, type: MqttMessageTypes.MESSAGE_SEND, sender: `${this.friday.satelliteId}`,
+    }, { sendAll: true });
     res.json({ message: 'Server has started' });
   };
 }

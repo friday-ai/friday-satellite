@@ -3,7 +3,7 @@ import MqttServer from './mqtt';
 import Friday from '../core/friday';
 import Log from '../utils/log';
 import Master from '../core/master';
-import { configMasterDir } from '../utils/constants';
+import { configMasterDir, MqttMessageTypes, TopicsTypes } from '../utils/constants';
 import { MqttOptions } from '../utils/interfaces';
 import { decrypt } from '../utils/keyring';
 
@@ -51,6 +51,10 @@ export default class Server {
           decrypt(infoMaster.mqttInfo, satelliteId),
         ),
       );
+
+      this.mqttServer.sendMessage({
+        topic: TopicsTypes.SATELLITE_HEARTBEAT, message: { message: 'I am alive !', satelliteId }, type: MqttMessageTypes.MESSAGE_SEND, sender: `${satelliteId}`,
+      }, { sendAll: true });
       logger.info('Server has started');
     }
 
