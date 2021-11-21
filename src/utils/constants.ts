@@ -1,15 +1,15 @@
-import {KVArr} from './interfaces';
+import { KVArr } from './interfaces';
 
 export const MasterHost: KVArr<KVArr<string>> = {
   development: {
     host: 'localhost',
-    port: '3000'
+    port: '3000',
   },
   production: {
     host: 'friday.master.local',
-    port: '1443'
-  }
-}
+    port: '1443',
+  },
+};
 export enum TopicsTypes {
   DEVICE_DESTROY = 'device/destroy',
   DEVICE_SET = 'device/set',
@@ -41,8 +41,8 @@ export enum EventsType {
   MQTT_PUBLISH_ALL = 'mqtt.publish.all',
 }
 
-export const TopicHeaderSub = 'friday/master/';
-export const TopicHeaderPub = 'friday/satellite/';
+export const TopicHeaderPub = 'friday/master';
+export const TopicHeaderSub = 'friday/satellite';
 
 export enum TopicToSubscribe {
   'device/destroy',
@@ -66,4 +66,9 @@ export enum MqttMessageTypes {
 
 export const satelliteDiscovery = '/api/v1/satellite/discovery';
 export const loginApi = '/api/v1/user/login';
+export const loginIhm = '/api/v1/satellite/login';
 export const masterInfo = '/api/v1/system/info';
+export const mqttConfig = '/api/v1/system/mqtt/config';
+export const configMasterDir = './config/fromMaster';
+
+export const SALT_KEY = '5a0240fc-e5a6-4293-b1d0-36f6e0c6c0ae';

@@ -1,65 +1,93 @@
+import fs from 'fs-extra';
 import MqttServer from './mqtt';
 import Friday from '../core/friday';
 import Log from '../utils/log';
 import Master from '../core/master';
+import { configMasterDir } from '../utils/constants';
+import { MqttOptions } from '../utils/interfaces';
+import { decrypt } from '../utils/keyring';
 
 const logger = new Log();
 
 export default class Server {
-    public mqttServer!: MqttServer;
-    public port: number;
-    readonly friday: any;
+  public mqttServer!: MqttServer;
+  public port: number;
+  readonly friday: any;
 
-    readonly debug: boolean;
+  readonly debug: boolean;
+  readonly file: string = `${configMasterDir}/info.json`;
 
-    constructor(port: number, friday: Friday, debug: boolean) {
-        this.port = port;
-        this.friday = friday;
-        this.debug = debug;
+  constructor(port: number, friday: Friday, debug: boolean) {
+    this.port = port;
+    this.friday = friday;
+    this.debug = debug;
+  }
+
+  async start() {
+    let infoMaster;
+    let satelliteId: string;
+
+    logger.info('Server is starting');
+    if (this.debug) {
+      logger.info('Server enter in debug mode !');
     }
 
-    async start() {
-        logger.info('Server is starting');
-        if(this.debug) logger.info('Server enter in debug mode !');
+    try {
+      infoMaster = fs.readJsonSync(this.file);
+    } catch (e) {
+      logger.info('Satellite has to be configured');
+    }
 
-        if (!Master.masterId) {
-            await this.waitUntil(await Master.discovery());
+    Master.masterId = await Master.infos();
 
-            logger.info('Login to master');
-            const sessionJWT = await Master.login('tony.stark@friday.fr', 'toto');
+    if (!infoMaster) {
+      return this.pingMaster(async () => {
+        logger.info('Login to master');
+        await Master.askLogin();
+        const sessionJWT = await Master.login('tony.stark@friday.fr', 'toto');
 
-            logger.info('Get master information');
-            const { mqttInfo, masterId } = await Master.infos(sessionJWT.accessToken);
+        logger.info('Get master information');
+        await Master.getMqttConfig(sessionJWT.accessToken);
 
-            Master.masterId = masterId;
-
-            logger.info('Get the mqtt options from master');
-            const mqttOptions = mqttInfo;
-
-            // initialize and start the Mqtt server instance
-            logger.info('start the Mqtt server');
-            this.mqttServer = new MqttServer(this.friday, mqttOptions);
-            await this.mqttServer.start();
-            logger.info('The Mqtt server has started');
-        }
-
+        logger.info('Get the mqtt options from master');
+        infoMaster = fs.readJsonSync(this.file);
+        satelliteId = decrypt(infoMaster.satelliteId, Master.masterId);
+        await this.startMqtt(
+          JSON.parse(
+            decrypt(infoMaster.mqttInfo, satelliteId),
+          ),
+        );
         logger.info('Server has started');
-        return this;
+        return satelliteId;
+      });
     }
+    satelliteId = decrypt(infoMaster.satelliteId, Master.masterId);
+    await this.startMqtt(
+      JSON.parse(
+        decrypt(infoMaster.mqttInfo, satelliteId),
+      ),
+    );
+    logger.info('Server has started');
+    return satelliteId;
+  }
 
+  private async startMqtt(config: MqttOptions) {
+    // initialize and start the Mqtt server instance
+    logger.info('start the Mqtt server');
+    this.mqttServer = new MqttServer(this.friday, config);
+    await this.mqttServer.start();
+    logger.info('The Mqtt server has started');
+  }
 
-    private async waitUntil(condition: boolean) {
-        return await new Promise(resolve => {
-            const interval = setInterval(() => {
-                logger.info(`${condition}`);
-                if (condition) {
-                    logger.info('Master is ready !');
-                    resolve('true');
-                    clearInterval(interval);
-                }
-            }, 3000);
-        });
-    }
-
-
+  private pingMaster(callback: () => void) {
+    const interval = setInterval(async () => {
+      logger.info('Ping Master');
+      const result = await Master.discovery();
+      if (result) {
+        logger.info('Master is ready !');
+        clearInterval(interval);
+        callback();
+      }
+    }, 3000);
+  }
 }

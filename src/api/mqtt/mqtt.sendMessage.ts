@@ -24,6 +24,9 @@ export default function sendMessage(this: MqttServer, message: MqttMessagePayloa
       } else if (mergedOptions.sendAll === false && typeof message.receiver === 'undefined') {
         throw new BadParametersError({ name: 'Send mqtt message', message: 'Incorrect params', metadata: { mergedOptions, message } });
       }
+      if (typeof message.message === 'object') {
+        message.message = JSON.stringify(message.message);
+      }
 
       logger.info(`Publish to ${finalTopic} (${message.message})`);
       this.MqttClient.publish(finalTopic, message.message);
