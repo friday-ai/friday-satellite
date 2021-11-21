@@ -25,8 +25,7 @@ export default class Server {
 
   async start() {
     let infoMaster;
-    let satelliteId: string;
-
+    let satelliteId: string = '';
     logger.info('Server is starting');
     if (this.debug) {
       logger.info('Server enter in debug mode !');
@@ -41,37 +40,25 @@ export default class Server {
     Master.masterId = await Master.infos();
 
     if (!infoMaster) {
-      return this.pingMaster(async () => {
+      this.pingMaster(async () => {
         logger.info('Login to master');
         await Master.askLogin();
-        const sessionJWT = await Master.login('tony.stark@friday.fr', 'toto');
-
-        logger.info('Get master information');
-        await Master.getMqttConfig(sessionJWT.accessToken);
-
-        logger.info('Get the mqtt options from master');
-        infoMaster = fs.readJsonSync(this.file);
-        satelliteId = decrypt(infoMaster.satelliteId, Master.masterId);
-        await this.startMqtt(
-          JSON.parse(
-            decrypt(infoMaster.mqttInfo, satelliteId),
-          ),
-        );
-        logger.info('Server has started');
-        return satelliteId;
       });
+    } else {
+      satelliteId = decrypt(infoMaster.satelliteId, Master.masterId);
+      await this.startMqtt(
+        JSON.parse(
+          decrypt(infoMaster.mqttInfo, satelliteId),
+        ),
+      );
+      logger.info('Server has started');
     }
-    satelliteId = decrypt(infoMaster.satelliteId, Master.masterId);
-    await this.startMqtt(
-      JSON.parse(
-        decrypt(infoMaster.mqttInfo, satelliteId),
-      ),
-    );
-    logger.info('Server has started');
-    return satelliteId;
+
+    this.friday.satelliteId = satelliteId;
+    return this;
   }
 
-  private async startMqtt(config: MqttOptions) {
+  async startMqtt(config: MqttOptions) {
     // initialize and start the Mqtt server instance
     logger.info('start the Mqtt server');
     this.mqttServer = new MqttServer(this.friday, config);

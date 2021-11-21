@@ -2,6 +2,7 @@ import Event from '../utils/event';
 import Scheduler from '../utils/scheduler';
 import jobs from '../config/jobs';
 import Log from '../utils/log';
+import Server from '../api/app';
 
 const logger = new Log();
 
@@ -9,6 +10,7 @@ export default class Friday {
   public event = new Event();
   public scheduler = new Scheduler(this.event, jobs);
   public satelliteId: void|string = '';
+  public server: Server|undefined;
 
   private debug: boolean;
 

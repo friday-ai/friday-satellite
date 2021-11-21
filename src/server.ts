@@ -19,7 +19,7 @@ const logger = new Log();
     const server = await new Server(port, friday, debug);
 
     // Start Friday server
-    friday.satelliteId = await server.start();
+    friday.server = await server.start();
 
     server.mqttServer.sendMessage({
       topic: TopicsTypes.SATELLITE_HEARTBEAT, message: { message: 'I am alive !', satelliteId: friday.satelliteId }, type: MqttMessageTypes.MESSAGE_SEND, sender: `${friday.satelliteId}`,
